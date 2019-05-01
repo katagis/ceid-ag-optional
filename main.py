@@ -1,6 +1,7 @@
 import sys
 import glob
 import re
+import math
 # use Collections Counter. Its the most optimized data structure for what we want to do.
 from collections import Counter
 
@@ -8,14 +9,18 @@ def GetFileList():
     return glob.glob("./documents/*.txt")
 
 # Read a list of words and convert them to a frequency dictionary
-def MakeCounterFromList(wordlist):
-    vec = Counter()
+def MakeDictFromList(wordlist):
+    vec = {}
     for word in wordlist:
-        vec[word.lower()] += 1
+        wlow = word.lower()
+        if wlow not in vec:
+            vec[wlow] = 1
+        else:
+            vec[wlow] += 1
     return vec
 
 
-def ReadFilesIntoCounters(filenames):
+def ReadFiles(filenames):
     data = {}
     for filename in filenames:
         try:
@@ -24,31 +29,30 @@ def ReadFilesIntoCounters(filenames):
             print("Failed to open file: " + filename + " (skipping)")
             continue
         # Use a regex to filter out symbols
-        data[filename] = MakeCounterFromList(re.findall(r"([a-zA-Z0-9\-]+)", file.read()))
+        data[filename] = MakeDictFromList(re.findall(r"([a-zA-Z0-9\-]+)", file.read()))
     return data
 
 # Return "|| d ||" length
 def VecLen(vec):
     x = 0
-    for elem in vec:
+    for elem in vec.values():
         x += elem**2
-    return sqrt(x)
+    return math.sqrt(x)
 
-# Don't forget to intersect the 2 Counters before calling this to align the data.
-# intersection can be performed since we only care about elements that exist in both sets
-#   (all others are 0*x == 0)
-# Expects 2 arrays of the same size
-def VecDot(vec1, vec2):
-    if len(vec1) != vev2:
-        raise "VecDot expects same size vectors."
-    return 
+# Expects 2 Dicts
+def Dot(c1, c2):
+    total = 0
+    for key in c1:
+        c2val = c2.get(key, None)
+        if c2val:
+            total += c1[key] * c2val
+    return total;
 
 
-# Get cos(d1, d2) similarity, expects Counter objects.
+# Get cos(d1, d2) similarity, expects Dictionary objects.
 def GetSimilarity(d1, d2):
+    return Dot(d1, d2) / (VecLen(d1) * VecLen(d2))
 
-
-            
 
 def main():
     filenames = GetFileList()
@@ -56,7 +60,12 @@ def main():
         print("No files found. Exiting...")
         exit
     
-    data = ReadFilesIntoCounters(filenames)
+    data = ReadFiles(filenames)
+    c1 = data[filenames[0]]
+    c2 = data[filenames[1]]
+    
+    z = GetSimilarity(c1, c2)
+    print(z)
 
 
 
