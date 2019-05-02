@@ -5,10 +5,13 @@ import math
 import timeit
 import os
 
-
 # Get a file list from somewhere, you can change this here
-def GetFileList(): 
-    return glob.glob("./documents/*.txt")
+def GetFileList():
+    try:
+        globfilter = sys.argv[1]
+    except:
+        globfilter = "./documents/*.txt"
+    return glob.glob(globfilter)
 
 # matching regex
 def GetRegex():
@@ -38,12 +41,8 @@ def Len(d):
 def Dot(c1, c2):
     total = 0
     for key, val in c1.items():
-        c2val = c2.get(key, None)
-        # if key exists in both (word found in both texts)
-        if c2val:
-            # increase sum
-            total += val * c2val
-    # all keys not included in one of c1 or c2 do not affect the total sum (freq * 0 == 0)
+        c2val = c2.get(key, 0) # get 0 if not exists
+        total += val * c2val
     return total
 
 class TextEntry:
@@ -80,75 +79,65 @@ class Similarity:
         return str(self) + "\n"
 
     def __str__(self):
-        return self.entry1.GetReadableName().ljust(24) + " | " + self.entry2.GetReadableName().ljust(24) + " : " + str(self.similar)
-    
+        return self.GetReadable()
 
-def DescSimilarity(a, b):
-    return 1 if a.similar > b.similar else -1
+    def GetReadable(self, padding=24):
+        return self.entry1.GetReadableName().ljust(padding) + " - " + self.entry2.GetReadableName().ljust(padding) + " : %1.4f" % self.similar
 
-# tirnangular array containing all similarities
-def Make2DArray(entries):
-    size = len(entries)
-    array = []
-    for i in range(size):
-        array.append([0] * size)
-        for j in range(i + 1, size):
-            array[i][j] = TextEntry.GetSimilarityBetween(entries[i], entries[j])
-    return array
+    # printing utility
+    def MaxEntrySize(self):
+        return max(len(self.entry1.GetReadableName()), len(self.entry2.GetReadableName()))
 
-def UtilPrintTriangle(array):
-    size = len(array)
-    for i in range(size):
-        for j in range(size):
-            if i > j:
-                val = array[j][i]
-            elif i < j:
-                val = array[i][j]
-            else:
-                val = 1.0
-            
-            if abs(val - 1) < 0.0001:
-                print(("   1    "), end='')
-            elif abs(val - 1) > 0.9999:
-                print(("   0    "), end='')
-            else:
-                print(("%f " % val)[1:], end='')
-        print()
+    @staticmethod
+    def PrintList(similarities):
+        # find max size of filename, use it as padding when printing to get a nice output result
+        padding = max(similarities, key=lambda sim: sim.MaxEntrySize()).MaxEntrySize()
+        for item in similarities:
+            print(item.GetReadable(padding))
 
-
-def MakeArray2(entries):
-    return [[Similarity(entries[i], entries[j]) for j in range(i + 1, len(entries))] for i in range(len(entries))]
-    
-def PrintTriangle2(array):
-    for subarray in array:
-        for val in subarray:
-            print(("%f " % val.similar)[1:], end='')
-        print()
-
+# Create similiarity objects and and sort them by similarity in a 1d array
+def MakeSimilarities(entries):
+    similarities = [Similarity(entries[i], entries[j])
+        # iterate all: 0 < i < size, i < j < size (triangular array)
+        for i in range(len(entries)) 
+        for j in range(i + 1, len(entries))
+    ]
+    return sorted(similarities, key=lambda sim: sim.similar, reverse=True)
 
 # Get a list of filepaths and read them as our data.
 def ReadFiles(filenames):
     entries = []
     for filename in filenames:
         entry = TextEntry(filename)
+        # skip an entry if we could not read the file
         if entry.ReadData():
             entries.append(entry)
     return entries
 
 def main():
     filenames = GetFileList()
+
+    try: 
+        k = int(sys.argv[2])
+    except:
+        k = 0
+
     if (len(filenames) == 0):
         print("No files found. Exiting...")
-        exit
-    
-    entries = ReadFiles(filenames)
-    UtilPrintTriangle(Make2DArray(entries))
+        exit(-1)
+
+    print("Including " + str(len(filenames)) + " files:")
+    for filename in filenames:
+        print(filename)
     print()
-    similar = MakeArray2(entries)
 
-    similarlinear = [item for items in similar for item in items]
-    print(similarlinear)
+    entries = ReadFiles(filenames)
+    similarities = MakeSimilarities(entries)
 
+    if k <= 0:
+        Similarity.PrintList(similarities)
+    else:
+        Similarity.PrintList(similarities[:k])
 
 if __name__ == "__main__":
     #timeit.timeit("main()")
