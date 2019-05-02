@@ -17,17 +17,6 @@ def GetRegex():
     #return r"([a-zA-Z0-9\-]+)"
     return r"(\w+)"
 
-# Read a list of words and convert them to a frequency dictionary
-def MakeDictFromList(wordlist):
-    vec = {}
-    for word in wordlist:
-        wlow = word.lower()
-        if wlow not in vec:
-            vec[wlow] = 1
-        else:
-            vec[wlow] += 1
-    return vec
-
 # Return "|| d ||" length
 def Len(d):
     x = 0
@@ -43,6 +32,17 @@ def Dot(c1, c2):
         c2val = c2.get(key, 0) # get 0 if not exists
         total += val * c2val
     return total
+
+# Read a list of words and convert them to a frequency dictionary
+def MakeDictFromList(wordlist):
+    vec = {}
+    for word in wordlist:
+        wlow = word.lower()
+        if wlow not in vec:
+            vec[wlow] = 1
+        else:
+            vec[wlow] += 1
+    return vec
 
 class TextEntry:
     def __init__(self, filename):
@@ -61,24 +61,25 @@ class TextEntry:
     def GetReadableName(self):
         return os.path.basename(self.filename)[:-4]
 
-    def __repr__(self):
-        return self.GetReadableName() + ": " + str(self.wordfreq)
-
     @staticmethod
     def GetSimilarityBetween(first, second):
         return Dot(first.wordfreq, second.wordfreq) / (Len(first.wordfreq) * Len(second.wordfreq))
+
+# Get a list of filepaths and read them as our data.
+def ReadFiles(filenames):
+    entries = []
+    for filename in filenames:
+        entry = TextEntry(filename)
+        # skip an entry if we could not read the file
+        if entry.ReadData():
+            entries.append(entry)
+    return entries
 
 class Similarity:
     def __init__(self, entry1, entry2):
         self.entry1 = entry1
         self.entry2 = entry2
         self.similar = TextEntry.GetSimilarityBetween(entry1, entry2)
-
-    def __repr__(self):
-        return str(self) + "\n"
-
-    def __str__(self):
-        return self.GetReadable()
 
     def GetReadable(self, padding=24):
         return self.entry1.GetReadableName().ljust(padding) + " - " + self.entry2.GetReadableName().ljust(padding) + " : %1.4f" % self.similar
@@ -104,16 +105,6 @@ def MakeSimilarities(entries):
         for j in range(i + 1, len(entries))
     ]
     return sorted(similarities, key=lambda sim: sim.similar, reverse=True)
-
-# Get a list of filepaths and read them as our data.
-def ReadFiles(filenames):
-    entries = []
-    for filename in filenames:
-        entry = TextEntry(filename)
-        # skip an entry if we could not read the file
-        if entry.ReadData():
-            entries.append(entry)
-    return entries
 
 def main():
     filenames = GetFileList()
