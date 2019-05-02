@@ -82,8 +82,8 @@ class Similarity:
         self.similar = TextEntry.GetSimilarityBetween(entry1, entry2)
 
     def GetReadable(self, padding=24):
-        return self.entry1.GetReadableName().ljust(padding) + " - " 
-            + self.entry2.GetReadableName().ljust(padding) + " : %1.4f" % self.similar
+        return self.entry1.GetReadableName().ljust(padding) + " - " \
+             + self.entry2.GetReadableName().ljust(padding) + " : %1.4f" % self.similar
 
     # printing utility
     def MaxEntrySize(self):
