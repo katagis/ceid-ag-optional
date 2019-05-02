@@ -88,10 +88,12 @@ class Similarity:
         return max(len(self.entry1.GetReadableName()), len(self.entry2.GetReadableName()))
 
     @staticmethod
-    def PrintList(similarities):
+    def PrintList(similarities, stopOnZero=False):
         # find max size of filename, use it as padding when printing to get a nice output result
         padding = max(similarities, key=lambda sim: sim.MaxEntrySize()).MaxEntrySize()
         for item in similarities:
+            if stopOnZero and item.similar == 0:
+                return
             print(item.GetReadable(padding))
 
 # Create similiarity objects and and sort them by similarity in a 1d array
@@ -134,7 +136,7 @@ def main():
     similarities = MakeSimilarities(entries)
 
     if k <= 0:
-        Similarity.PrintList(similarities)
+        Similarity.PrintList(similarities, stopOnZero = True)
     else:
         Similarity.PrintList(similarities[:k])
 
