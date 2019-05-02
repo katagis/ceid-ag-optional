@@ -4,12 +4,16 @@ import re
 import math
 import timeit
 import os
-# use Collections Counter. Its the most optimized data structure for what we want to do.
-from collections import Counter
+
 
 # Get a file list from somewhere, you can change this here
 def GetFileList(): 
     return glob.glob("./documents/*.txt")
+
+# matching regex
+def GetRegex():
+    #return r"([a-zA-Z0-9\-]+)"
+    return r"(\w+)"
 
 # Read a list of words and convert them to a frequency dictionary
 def MakeDictFromList(wordlist):
@@ -52,8 +56,8 @@ class TextEntry:
         except:
             print("Failed to open file: " + self.filename + " (skipping)")
             return False
-        # Use a regex to filter out symbols
-        self.wordfreq = MakeDictFromList(re.findall(r"([a-zA-Z0-9\-]+)", file.read()))
+        # Use a regex to filter out symbols, save to a word freq dictionary.
+        self.wordfreq = MakeDictFromList(re.findall(GetRegex(), file.read()))
         return True
 
     def GetReadableName(self):
@@ -66,6 +70,22 @@ class TextEntry:
     def GetSimilarityBetween(first, second):
         return Dot(first.wordfreq, second.wordfreq) / (Len(first.wordfreq) * Len(second.wordfreq))
 
+class Similarity:
+    def __init__(self, entry1, entry2):
+        self.entry1 = entry1
+        self.entry2 = entry2
+        self.similar = TextEntry.GetSimilarityBetween(entry1, entry2)
+
+    def __repr__(self):
+        return str(self) + "\n"
+
+    def __str__(self):
+        return self.entry1.GetReadableName().ljust(24) + " | " + self.entry2.GetReadableName().ljust(24) + " : " + str(self.similar)
+    
+
+def DescSimilarity(a, b):
+    return 1 if a.similar > b.similar else -1
+
 # tirnangular array containing all similarities
 def Make2DArray(entries):
     size = len(entries)
@@ -77,16 +97,15 @@ def Make2DArray(entries):
     return array
 
 def UtilPrintTriangle(array):
-    print(array)
     size = len(array)
     for i in range(size):
         for j in range(size):
             if i > j:
-                val = array[i][j]
+                val = array[j][i]
             elif i < j:
                 val = array[i][j]
             else:
-                val = 1.0;
+                val = 1.0
             
             if abs(val - 1) < 0.0001:
                 print(("   1    "), end='')
@@ -95,6 +114,17 @@ def UtilPrintTriangle(array):
             else:
                 print(("%f " % val)[1:], end='')
         print()
+
+
+def MakeArray2(entries):
+    return [[Similarity(entries[i], entries[j]) for j in range(i + 1, len(entries))] for i in range(len(entries))]
+    
+def PrintTriangle2(array):
+    for subarray in array:
+        for val in subarray:
+            print(("%f " % val.similar)[1:], end='')
+        print()
+
 
 # Get a list of filepaths and read them as our data.
 def ReadFiles(filenames):
@@ -113,6 +143,12 @@ def main():
     
     entries = ReadFiles(filenames)
     UtilPrintTriangle(Make2DArray(entries))
+    print()
+    similar = MakeArray2(entries)
+
+    similarlinear = [item for items in similar for item in items]
+    print(similarlinear)
+
 
 if __name__ == "__main__":
     #timeit.timeit("main()")
