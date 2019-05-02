@@ -2,10 +2,9 @@ import sys
 import glob
 import re
 import math
-import timeit
 import os
 
-# Get a file list from somewhere, you can change this here
+# Get a file list from somewhere, use argv[1] if exists.
 def GetFileList():
     try:
         globfilter = sys.argv[1]
@@ -13,7 +12,7 @@ def GetFileList():
         globfilter = "./documents/*.txt"
     return glob.glob(globfilter)
 
-# matching regex
+# matching regex, can be u
 def GetRegex():
     #return r"([a-zA-Z0-9\-]+)"
     return r"(\w+)"
@@ -140,6 +139,5 @@ def main():
         Similarity.PrintList(similarities[:k])
 
 if __name__ == "__main__":
-    #timeit.timeit("main()")
     main()
     
