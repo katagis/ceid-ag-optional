@@ -82,7 +82,8 @@ class Similarity:
         self.similar = TextEntry.GetSimilarityBetween(entry1, entry2)
 
     def GetReadable(self, padding=24):
-        return self.entry1.GetReadableName().ljust(padding) + " - " + self.entry2.GetReadableName().ljust(padding) + " : %1.4f" % self.similar
+        return self.entry1.GetReadableName().ljust(padding) + " - " 
+            + self.entry2.GetReadableName().ljust(padding) + " : %1.4f" % self.similar
 
     # printing utility
     def MaxEntrySize(self):
@@ -121,9 +122,14 @@ def main():
     print("Including " + str(len(filenames)) + " files:")
     for filename in filenames:
         print(filename)
-    print()
+    print("")
 
     entries = ReadFiles(filenames)
+    
+    if len(entries) < 2:
+        print("No more than 2 files were read successfully. Exiting...")
+        exit(-1)
+    
     similarities = MakeSimilarities(entries)
 
     if k <= 0:
